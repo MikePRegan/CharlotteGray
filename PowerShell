@@ -1,3 +1,55 @@
+2nd piece
+
+Get-ADUser -SearchBase 'OU=LO,DC=lw,DC=com' -SearchScope 1 -Filter * -Properties Name, DisplayName, SAMAccountName, EMailAddress, Office, MemberOf, * | Select Name, SAMAccountName, EMailAddress, Office, @{n='MemberOf'; e= {($_.MemberOf | % { (Get-ADObject $_).Name }) -Join "," }} | Sort-Object -Property Name | FT -A
+
+Get-ADUser Username -Properties * | Select *
+
+(Get-Adobject $_ -Properties *)
+
+
+
+
+List all AD & Computer Objects
+
+It first pulls back a list of all users, then from that finds all of the used properties on each user, then combines this to get a list of all of the properties that your company is using (i.e. for any user), then outputs all of these properties for all users (i.e. even where it's null for a user). It also does the same for computers.
+
+Clear-Host
+
+$SearchBase = 'DC=LW,DC=Com'
+
+$Users_fn = ("C:\Temp\Scripts\AllAdExport_Users_{0:yyyyMMdd_HHmmss}.csv" -f Get-Date))
+
+$Computers_fn = ("C:\Temp\Scripts\AllAdExport_Computers_{0:yyyyMMdd_HHmmss}.csv" -f Get-Date))
+
+"Collecting user info"
+
+$AllUsers = Get-ADUser -Filter {Enabled -EQ $True} -SearchBase $SearchBase -SearchScope SubTree -Properties *
+
+"Collecting user property info"
+
+$AllProperties = $AllUsers | %{ $_.PSObject.Properties | Select Name } | Select -Expand Name -Unique | Sort
+
+"Exporting users"
+
+$AllUsers | Select $AllProperties | Export-CSV $Users_fn -NoTypeInformation
+
+"Collecting computer info"
+
+$AllComputers = Get-ADComputer -Filter {Enabled -EQ $True} -SearchBase $SearchBase -SearchScope SubTree -Properties *
+
+"Collecting computer property info"
+
+$AllProperties = $AllComputers | %{ $_.PSObject.Properties | Select Name } | Select -Expand Name -Unique | sort
+
+"Exporting computers"
+
+$AllComputers | Select $AllProperties | Export-CSV $Computers_fn -NoTypeInformation
+
+
+
+
+1st piece
+
 1)	First thing’s first, import the csv as a variable.  Use this variable for all subsequent tasks.
 $Users = Import-CSV Users.csv
 
